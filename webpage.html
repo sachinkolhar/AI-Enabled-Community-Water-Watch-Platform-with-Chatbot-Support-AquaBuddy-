@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Water Watch Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html { scroll-behavior: smooth; }
+    section { box-shadow: 0 8px 16px rgba(0,0,255,0.1); }
+    .landing-title { animation: fadeIn 2s ease forwards; }
+    .landing-subtitle { animation: fadeIn 2.5s ease forwards; }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      background-color: #e0f7fa;
+      transition: 0.3s ease-in-out;
+    }
+    .chatbot-button { animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0,191,255,0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(0,191,255,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,191,255,0); }
+    }
+    footer { background: linear-gradient(135deg,#00bcd4 0%,#2196f3 100%); }
+    button:hover { transform: scale(1.05); transition: 0.3s ease-in-out; }
+    .upload-button {
+      background: linear-gradient(to right,#00bcd4,#8bc34a);
+      color: #fff; font-weight: bold;
+    }
+    .upload-button:hover {
+      background: linear-gradient(to right,#8bc34a,#00bcd4);
+      box-shadow:0 8px 16px rgba(0,0,0,0.2);
+    }
+    .input-box {
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 8px 12px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    /* Dark mode styles */
+    .dark {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    .dark .bg-white {
+      background-color: #2d2d2d;
+    }
+    .dark .text-gray-800 {
+      color: #ffffff;
+    }
+    .dark .border-gray-200 {
+      border-color: #404040;
+    }
+    .dark .bg-gray-50 {
+      background-color: #2d2d2d;
+    }
+    .dark .text-gray-600 {
+      color: #a0a0a0;
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-blue-50 text-gray-800 transition-colors duration-200">
+
+  <!-- Login/Signup Page -->
+  <div id="authPage" class="h-screen flex flex-col justify-center items-center bg-gradient-to-b from-blue-400 to-blue-200">
+    <h1 class="text-4xl font-bold text-white mb-8">AquaSentry 💧</h1>
+    
+    <!-- Login Form -->
+    <div id="loginForm" class="bg-white p-8 rounded-lg shadow-lg w-80">
+      <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+      <input id="loginEmail" type="email" placeholder="Email" class="input-box"/>
+      <input id="loginPassword" type="password" placeholder="Password" class="input-box"/>
+      <button onclick="login()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded">Login</button>
+      <p class="text-center mt-4">Don't have an account? <a href="#" onclick="toggleForms()" class="text-blue-500">Sign Up</a></p>
+      <p id="loginErrorMsg" class="text-red-500 mt-4 hidden">Invalid credentials. Try again!</p>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signupForm" class="bg-white p-8 rounded-lg shadow-lg w-80 hidden">
+      <h2 class="text-2xl font-bold mb-6 text-center">Sign Up</h2>
+      <input id="signupName" type="text" placeholder="Full Name" class="input-box"/>
+      <input id="signupPhone" type="tel" placeholder="Phone Number" class="input-box" maxlength="10"/>
+      <input id="signupEmail" type="email" placeholder="Email" class="input-box"/>
+      <input id="signupPassword" type="password" placeholder="Password" class="input-box"/>
+      <button onclick="signup()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded">Sign Up</button>
+      <p class="text-center mt-4">Already have an account? <a href="#" onclick="toggleForms()" class="text-blue-500">Login</a></p>
+      <p id="signupErrorMsg" class="text-red-500 mt-4 hidden"></p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="mainContent" class="hidden">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg fixed top-0 w-full z-50 dark:bg-gray-800">
+      <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <span class="text-2xl font-bold text-blue-600">AquaSentry 💧</span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button onclick="toggleNotifications()" class="relative p-2 text-gray-600 hover:text-blue-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+              </svg>
+              <span id="notificationCount" class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+            </button>
+            <button onclick="toggleProfile()" class="flex items-center space-x-2 p-2 text-gray-600 hover:text-blue-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <span id="userName" class="font-medium"></span>
+            </button>
+            <button onclick="toggleDarkMode()" class="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-300">
+              <svg id="darkModeIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+              </svg>
+            </button>
+            <button onclick="toggleHelp()" class="p-2 text-gray-600 hover:text-blue-600 dark:text-gray-300">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Notifications Panel -->
+    <div id="notificationsPanel" class="fixed top-16 right-4 bg-white shadow-lg rounded-lg w-80 max-h-96 overflow-y-auto hidden z-50">
+      <div class="p-4 border-b">
+        <h3 class="font-bold">Notifications</h3>
+      </div>
+      <div id="notificationsList" class="divide-y">
+        <!-- Notifications will be added here -->
+      </div>
+    </div>
+
+    <!-- Profile Panel -->
+    <div id="profilePanel" class="fixed top-16 right-4 bg-white shadow-lg rounded-lg w-80 hidden z-50">
+      <div class="p-4 border-b">
+        <h3 class="font-bold">Profile</h3>
+      </div>
+      <div class="p-4">
+        <div class="mb-4">
+          <label class="block text-gray-600 mb-1">Name</label>
+          <div id="profileName" class="font-medium"></div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-600 mb-1">Email</label>
+          <div id="profileEmail" class="font-medium"></div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-600 mb-1">Phone</label>
+          <div id="profilePhone" class="font-medium"></div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-600 mb-1">Reports Submitted</label>
+          <div id="profileReports" class="font-medium"></div>
+        </div>
+        <button onclick="logout()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Help Panel -->
+    <div id="helpPanel" class="fixed top-16 right-4 bg-white shadow-lg rounded-lg w-80 max-h-96 overflow-y-auto hidden z-50 dark:bg-gray-800">
+      <div class="p-4 border-b dark:border-gray-700">
+        <h3 class="font-bold">Help & Support</h3>
+      </div>
+      <div class="p-4 space-y-4">
+        <div>
+          <h4 class="font-medium mb-2">How to Report an Issue</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Click the "Upload Report" button, fill in the details, and attach any relevant photos or videos.</p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-2">Track Your Reports</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-300">View the status of your reports in the notifications panel or the "My Reports" section.</p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-2">Chatbot Assistance</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Use the chatbot for water-related queries and tips on water conservation.</p>
+        </div>
+        <div>
+          <h4 class="font-medium mb-2">Contact Support</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-300">Email: support@aquasentry.com<br>Phone: +91 1234567890</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" class="fixed top-16 right-4 bg-white shadow-lg rounded-lg w-80 hidden z-50 dark:bg-gray-800">
+      <div class="p-4 border-b dark:border-gray-700">
+        <h3 class="font-bold">Settings</h3>
+      </div>
+      <div class="p-4 space-y-4">
+        <div>
+          <label class="flex items-center space-x-2">
+            <input type="checkbox" id="darkModeToggle" class="form-checkbox h-5 w-5 text-blue-600">
+            <span>Dark Mode</span>
+          </label>
+        </div>
+        <div>
+          <label class="block text-gray-600 dark:text-gray-300 mb-2">Language</label>
+          <select id="languageSelect" class="input-box dark:bg-gray-700 dark:border-gray-600">
+            <option value="en">English</option>
+            <option value="hi">हिंदी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="te">తెలుగు</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-gray-600 dark:text-gray-300 mb-2">Notification Preferences</label>
+          <div class="space-y-2">
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" checked>
+              <span>Email Notifications</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" checked>
+              <span>Status Updates</span>
+            </label>
+          </div>
+        </div>
+        <button onclick="saveSettings()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+          Save Settings
+        </button>
+      </div>
+    </div>
+
+    <!-- Add padding to account for fixed navbar -->
+    <div class="pt-16">
+      <!-- Landing -->
+      <section class="h-screen flex flex-col justify-center items-center text-center bg-gradient-to-b from-blue-400 to-blue-200">
+        <h1 class="text-5xl font-bold text-white mb-4 landing-title">Your Water, Our Future 💧</h1>
+        <p class="text-xl text-white mb-8 landing-subtitle">Empowering Citizens to Protect Every Drop</p>
+        <a href="#report" class="bg-white text-blue-600 font-semibold py-3 px-6 rounded-full hover:bg-blue-100 transition">Report an Issue</a>
+      </section>
+
+      <!-- Features -->
+      <section class="py-16 px-8">
+        <h2 class="text-3xl font-bold text-center mb-10">What We Offer</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div class="bg-white rounded-lg shadow-lg p-6 text-center feature-card">
+            <h3 class="text-xl font-bold mb-4">📷 Report Issues</h3>
+            <p>Upload photos/videos to highlight water problems in your area.</p>
+          </div>
+          <div class="bg-white rounded-lg shadow-lg p-6 text-center feature-card">
+            <h3 class="text-xl font-bold mb-4">🤖 AI Verification</h3>
+            <p>AI checks submissions to avoid spam and false reports.</p>
+          </div>
+          <div class="bg-white rounded-lg shadow-lg p-6 text-center feature-card">
+            <h3 class="text-xl font-bold mb-4">💬 24/7 Chatbot Support</h3>
+            <p>Get help, water-saving tips, and connect with authorities anytime.</p>
+          </div>
+          <div class="bg-white rounded-lg shadow-lg p-6 text-center feature-card">
+            <h3 class="text-xl font-bold mb-4">📈 Track Complaints</h3>
+            <p>Stay updated on the status of your reports easily.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard -->
+      <section class="py-16 bg-gray-50 dark:bg-gray-800">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-10">Water Issues Dashboard</h2>
+          
+          <!-- Statistics Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+              <div class="text-4xl font-bold text-blue-600 mb-2" id="totalReports">0</div>
+              <div class="text-gray-600">Total Reports</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+              <div class="text-4xl font-bold text-green-600 mb-2" id="resolvedReports">0</div>
+              <div class="text-gray-600">Resolved Issues</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+              <div class="text-4xl font-bold text-yellow-600 mb-2" id="pendingReports">0</div>
+              <div class="text-gray-600">Pending Issues</div>
+            </div>
+          </div>
+
+          <!-- Map and Issue Types -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Map Container -->
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-lg p-4">
+              <div id="map" class="h-96 rounded-lg"></div>
+            </div>
+            
+            <!-- Issue Types Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-4">
+              <h3 class="text-xl font-bold mb-4">Issue Types Distribution</h3>
+              <div id="issueTypesChart" class="h-96"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Water Conservation Tips -->
+      <section class="py-16 px-8">
+        <div class="container mx-auto">
+          <h2 class="text-3xl font-bold text-center mb-10">Water Conservation Tips 💧</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🚰</div>
+              <h3 class="text-xl font-bold mb-2">Fix Leaks</h3>
+              <p class="text-gray-600 dark:text-gray-300">A dripping faucet can waste up to 20 gallons of water per day. Regular maintenance can save thousands of gallons annually.</p>
+            </div>
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🚿</div>
+              <h3 class="text-xl font-bold mb-2">Shorter Showers</h3>
+              <p class="text-gray-600 dark:text-gray-300">Reducing shower time by just 2 minutes can save up to 5 gallons of water per shower.</p>
+            </div>
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🌱</div>
+              <h3 class="text-xl font-bold mb-2">Smart Gardening</h3>
+              <p class="text-gray-600 dark:text-gray-300">Water plants early morning or late evening to reduce evaporation. Use drip irrigation for efficiency.</p>
+            </div>
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🍽️</div>
+              <h3 class="text-xl font-bold mb-2">Efficient Dishwashing</h3>
+              <p class="text-gray-600 dark:text-gray-300">Run full loads in dishwasher. Hand washing with a basin uses less water than running tap.</p>
+            </div>
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🚗</div>
+              <h3 class="text-xl font-bold mb-2">Car Washing</h3>
+              <p class="text-gray-600 dark:text-gray-300">Use a bucket instead of a hose. Commercial car washes often recycle water.</p>
+            </div>
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">💧</div>
+              <h3 class="text-xl font-bold mb-2">Rainwater Harvesting</h3>
+              <p class="text-gray-600 dark:text-gray-300">Collect rainwater for gardening and cleaning. Every drop counts!</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Community Section -->
+      <section class="py-16 bg-blue-100 dark:bg-gray-700">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-10">Join Our Community 🌍</h2>
+          
+          <!-- Community Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+              <div class="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2" id="totalUsers">0</div>
+              <div class="text-gray-600 dark:text-gray-300">Active Users</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+              <div class="text-4xl font-bold text-green-600 dark:text-green-400 mb-2" id="savedWater">0</div>
+              <div class="text-gray-600 dark:text-gray-300">Liters of Water Saved</div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+              <div class="text-4xl font-bold text-yellow-600 dark:text-yellow-400 mb-2" id="communityPosts">0</div>
+              <div class="text-gray-600 dark:text-gray-300">Community Posts</div>
+            </div>
+          </div>
+
+          <!-- Community Posts -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">Recent Community Posts</h3>
+            <div id="communityFeed" class="space-y-4">
+              <!-- Posts will be dynamically added here -->
+            </div>
+            <div class="mt-6">
+              <textarea id="newPost" placeholder="Share your water conservation tips..." class="w-full p-3 border rounded-lg mb-2 dark:bg-gray-700 dark:border-gray-600"></textarea>
+              <button onclick="submitPost()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                Share Post
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Rewards Section -->
+      <section class="py-16 px-8">
+        <div class="container mx-auto">
+          <h2 class="text-3xl font-bold text-center mb-10">Earn Rewards 🌟</h2>
+          
+          <!-- User Progress -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h3 class="text-xl font-bold mb-4">Your Progress</h3>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="userPoints">0</div>
+                <div class="text-gray-600 dark:text-gray-300">Points Earned</div>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="userLevel">Level 1</div>
+                <div class="text-gray-600 dark:text-gray-300">Current Level</div>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+              <div id="progressBar" class="bg-blue-600 h-4 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Achievements -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">📝</div>
+              <h3 class="text-xl font-bold mb-2">First Report</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Submit your first water issue report</p>
+              <div class="flex items-center">
+                <span class="text-yellow-500 mr-2">+50 points</span>
+                <div id="firstReportBadge" class="ml-auto badge locked">🔒</div>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">💬</div>
+              <h3 class="text-xl font-bold mb-2">Community Star</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Share 5 helpful tips in the community</p>
+              <div class="flex items-center">
+                <span class="text-yellow-500 mr-2">+100 points</span>
+                <div id="communityStarBadge" class="ml-auto badge locked">🔒</div>
+              </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">💧</div>
+              <h3 class="text-xl font-bold mb-2">Water Warrior</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Save 1000 liters of water</p>
+              <div class="flex items-center">
+                <span class="text-yellow-500 mr-2">+200 points</span>
+                <div id="waterWarriorBadge" class="ml-auto badge locked">🔒</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rewards Shop -->
+          <div class="mt-12">
+            <h3 class="text-2xl font-bold text-center mb-8">Redeem Your Points</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 text-center">
+                <div class="text-4xl mb-4">🎁</div>
+                <button onclick="openRewardsShop()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                  View Rewards
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Water Quality Monitoring -->
+      <section class="py-16 bg-blue-50 dark:bg-gray-800">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-10">Water Quality Monitoring 💧</h2>
+          
+          <!-- Real-time Monitoring -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <h3 class="text-xl font-bold mb-4">Your Area's Water Quality</h3>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">pH Level</span>
+                  <div class="flex items-center">
+                    <span id="phValue" class="font-bold mr-2">7.2</span>
+                    <span class="text-green-500">Good</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Turbidity</span>
+                  <div class="flex items-center">
+                    <span id="turbidityValue" class="font-bold mr-2">0.5</span>
+                    <span class="text-green-500">Clear</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Chlorine</span>
+                  <div class="flex items-center">
+                    <span id="chlorineValue" class="font-bold mr-2">2.0</span>
+                    <span class="text-green-500">Safe</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-6">
+                <button onclick="requestWaterTest()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                  Request Water Test
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <h3 class="text-xl font-bold mb-4">Water Quality Trends</h3>
+              <div id="qualityChart" class="h-64"></div>
+              <div class="mt-4 text-sm text-gray-600 dark:text-gray-300">
+                Last updated: <span id="lastUpdate">Just now</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Water Quality Guidelines -->
+          <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">Water Quality Guidelines</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead>
+                  <tr class="bg-gray-100 dark:bg-gray-600">
+                    <th class="p-3 text-left">Parameter</th>
+                    <th class="p-3 text-left">Safe Range</th>
+                    <th class="p-3 text-left">Health Impact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-t">
+                    <td class="p-3">pH Level</td>
+                    <td class="p-3">6.5 - 8.5</td>
+                    <td class="p-3">Affects taste and pipe corrosion</td>
+                  </tr>
+                  <tr class="border-t">
+                    <td class="p-3">Turbidity (NTU)</td>
+                    <td class="p-3">0 - 5</td>
+                    <td class="p-3">Indicates water clarity and particles</td>
+                  </tr>
+                  <tr class="border-t">
+                    <td class="p-3">Chlorine (mg/L)</td>
+                    <td class="p-3">0.2 - 4.0</td>
+                    <td class="p-3">Disinfection effectiveness</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Educational Resources -->
+      <section class="py-16 px-8">
+        <div class="container mx-auto">
+          <h2 class="text-3xl font-bold text-center mb-10">Learn About Water 🌊</h2>
+          
+          <!-- Resource Categories -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">📚</div>
+              <h3 class="text-xl font-bold mb-2">Water Conservation</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Learn how to reduce water usage at home and in your community.</p>
+              <button onclick="openResource('conservation')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                View Resources
+              </button>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🔬</div>
+              <h3 class="text-xl font-bold mb-2">Water Science</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Understand the chemistry and biology of water systems.</p>
+              <button onclick="openResource('science')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                View Resources
+              </button>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+              <div class="text-4xl mb-4">🌍</div>
+              <h3 class="text-xl font-bold mb-2">Global Water Issues</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Explore water challenges and solutions worldwide.</p>
+              <button onclick="openResource('global')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                View Resources
+              </button>
+            </div>
+          </div>
+
+          <!-- Resource Library -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">Resource Library</h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div>
+                  <h4 class="font-bold">Water Conservation Guide</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">PDF • 2.5MB</p>
+                </div>
+                <button onclick="downloadResource('conservation-guide')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                  Download
+                </button>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div>
+                  <h4 class="font-bold">Water Quality Testing Manual</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">PDF • 1.8MB</p>
+                </div>
+                <button onclick="downloadResource('testing-manual')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                  Download
+                </button>
+              </div>
+              <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div>
+                  <h4 class="font-bold">Rainwater Harvesting Guide</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">PDF • 3.2MB</p>
+                </div>
+                <button onclick="downloadResource('rainwater-guide')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                  Download
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Water Usage Calculator -->
+      <section class="py-16 bg-blue-50 dark:bg-gray-800">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-10">Water Usage Calculator 💧</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Calculator Form -->
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <h3 class="text-xl font-bold mb-4">Calculate Your Water Usage</h3>
+              <form id="waterCalculatorForm" onsubmit="calculateWaterUsage(event)">
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-gray-600 dark:text-gray-300 mb-2">Shower Duration (minutes/day)</label>
+                    <input type="number" id="showerDuration" class="input-box" min="0" value="10">
+                  </div>
+                  <div>
+                    <label class="block text-gray-600 dark:text-gray-300 mb-2">Toilet Flushes (times/day)</label>
+                    <input type="number" id="toiletFlushes" class="input-box" min="0" value="5">
+                  </div>
+                  <div>
+                    <label class="block text-gray-600 dark:text-gray-300 mb-2">Dishwasher Loads (per week)</label>
+                    <input type="number" id="dishwasherLoads" class="input-box" min="0" value="3">
+                  </div>
+                  <div>
+                    <label class="block text-gray-600 dark:text-gray-300 mb-2">Washing Machine Loads (per week)</label>
+                    <input type="number" id="washingMachineLoads" class="input-box" min="0" value="2">
+                  </div>
+                  <div>
+                    <label class="block text-gray-600 dark:text-gray-300 mb-2">Outdoor Watering (minutes/week)</label>
+                    <input type="number" id="outdoorWatering" class="input-box" min="0" value="30">
+                  </div>
+                  <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    Calculate Usage
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Results -->
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+              <h3 class="text-xl font-bold mb-4">Your Water Usage</h3>
+              <div id="waterUsageResults" class="space-y-4">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Daily Usage</span>
+                  <span id="dailyUsage" class="font-bold">0 gallons</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Weekly Usage</span>
+                  <span id="weeklyUsage" class="font-bold">0 gallons</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Monthly Usage</span>
+                  <span id="monthlyUsage" class="font-bold">0 gallons</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600 dark:text-gray-300">Annual Usage</span>
+                  <span id="annualUsage" class="font-bold">0 gallons</span>
+                </div>
+                <div class="mt-6">
+                  <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                    <div id="usageProgress" class="bg-blue-600 h-4 rounded-full" style="width: 0%"></div>
+                  </div>
+                  <div class="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                    <span id="usageComparison">Your usage is average</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Conservation Plan -->
+      <section class="py-16 px-8">
+        <div class="container mx-auto">
+          <h2 class="text-3xl font-bold text-center mb-10">Your Conservation Plan 🌱</h2>
+          
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-bold mb-4">Personalized Recommendations</h3>
+            <div id="conservationRecommendations" class="space-y-4">
+              <!-- Recommendations will be dynamically added here -->
+            </div>
+            
+            <div class="mt-8">
+              <h3 class="text-xl font-bold mb-4">Track Your Progress</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+                  <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="waterSaved">0</div>
+                  <div class="text-gray-600 dark:text-gray-300">Gallons Saved</div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+                  <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="moneySaved">$0</div>
+                  <div class="text-gray-600 dark:text-gray-300">Money Saved</div>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+                  <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="daysStreak">0</div>
+                  <div class="text-gray-600 dark:text-gray-300">Day Streak</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-8">
+              <h3 class="text-xl font-bold mb-4">Weekly Goals</h3>
+              <div id="weeklyGoals" class="space-y-4">
+                <!-- Goals will be dynamically added here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Report -->
+      <section id="report" class="py-16 bg-blue-100 text-center">
+        <h2 class="text-3xl font-bold mb-6">Snap. Upload. Solve. 🚰</h2>
+        <p class="mb-8">Quickly report water leaks, pollution, or misuse in your area!</p>
+        <div class="flex justify-center gap-4">
+          <button onclick="openReportModal()" class="upload-button py-3 px-6 rounded-full hover:bg-blue-600 transition">Upload Report</button>
+          <button onclick="viewMyReports()" class="bg-white text-blue-600 font-semibold py-3 px-6 rounded-full hover:bg-blue-100 transition">View My Reports</button>
+        </div>
+      </section>
+
+      <!-- My Reports Modal -->
+      <div id="reportsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold">My Reports</h3>
+            <button onclick="closeReportsModal()" class="text-gray-500 hover:text-gray-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          <div id="reportsList" class="space-y-4">
+            <!-- Reports will be dynamically added here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Upload Modal -->
+      <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-8 w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-4">Report Water Issue</h3>
+          <form id="reportForm" onsubmit="submitReport(event)">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Issue Type</label>
+              <select id="issueType" class="input-box" required>
+                <option value="">Select issue type</option>
+                <option value="leak">Water Leak</option>
+                <option value="pollution">Water Pollution</option>
+                <option value="wastage">Water Wastage</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Location</label>
+              <input type="text" id="location" placeholder="Enter location" class="input-box" required>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Description</label>
+              <textarea id="description" placeholder="Describe the issue" class="input-box h-24" required></textarea>
+            </div>
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">Upload Photo/Video</label>
+              <input type="file" id="mediaUpload" accept="image/*,video/*" class="input-box" required>
+            </div>
+            <div class="flex justify-end gap-4">
+              <button type="button" onclick="closeReportModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                Cancel
+              </button>
+              <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                Submit Report
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="text-center py-6 text-white">
+        Together, let's make every drop count. 💧🌍
+      </footer>
+
+      <!-- Chatbot Toggle -->
+      <div class="fixed bottom-6 right-6">
+        <button onclick="toggleChat()" class="bg-blue-600 p-4 rounded-full shadow-lg chatbot-button hover:bg-blue-700">
+          <span class="text-white text-2xl">💬</span>
+        </button>
+      </div>
+
+      <!-- Chatbot Popup -->
+      <div id="chatbot" class="hidden fixed bottom-24 right-6 bg-white w-80 shadow-lg rounded-lg overflow-hidden flex flex-col">
+        <div class="bg-blue-600 text-white text-center p-3 font-bold flex justify-between items-center">
+          <span>Water Chatbot 💧</span>
+          <div class="flex space-x-2">
+            <button onclick="toggleVoiceInput()" id="voiceButton" class="p-1 rounded-full hover:bg-blue-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+              </svg>
+            </button>
+            <button onclick="toggleChat()" class="p-1 rounded-full hover:bg-blue-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="chatMessages" class="p-3 h-64 overflow-y-auto text-sm"></div>
+        <div class="flex border-t">
+          <input id="userInput" type="text" placeholder="Ask about water..." class="flex-1 p-2 outline-none"/>
+          <button onclick="sendMessage()" class="bg-blue-500 hover:bg-blue-600 text-white px-4">Send</button>
+        </div>
+      </div>
+
+      <!-- Voice Input Status -->
+      <div id="voiceStatus" class="hidden fixed bottom-24 right-6 bg-white w-80 shadow-lg rounded-lg p-3 text-center">
+        <div class="flex items-center justify-center space-x-2">
+          <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+          <span>Listening...</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Replace with your PaLM (Gemini) API Key
+    const GEMINI_API_KEY = 'YOUR_API_KEY';
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+
+    function toggleForms() {
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      loginForm.classList.toggle('hidden');
+      signupForm.classList.toggle('hidden');
+    }
+
+    
+async function signup() {
+  const name = document.getElementById('signupName').value.trim();
+  const phone = document.getElementById('signupPhone').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value.trim();
+
+  const response = await fetch('http://localhost:5000/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, phone, email, password })
+  });
+
+  const data = await response.json();
+  if (response.ok) {
+    alert('Signup successful!');
+    toggleForms(); // show login form
+  } else {
+    alert(data.error || 'Signup failed');
+  }
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+
+  const response = await fetch('http://localhost:5000/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await response.json();
+  if (response.ok) {
+    localStorage.setItem('currentUser', JSON.stringify(data.user));
+    document.getElementById('authPage').style.display = 'none';
+    document.getElementById('mainContent').classList.remove('hidden');
+  } else {
+    alert(data.error || 'Login failed');
+  }
+}
+
+
+function login() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const errorMsg = document.getElementById('loginErrorMsg');
+
+      const user = users.find(u => u.email === email && u.password === password);
+      
+      if (user) {
+        document.getElementById('authPage').style.display = 'none';
+        document.getElementById('mainContent').classList.remove('hidden');
+        errorMsg.classList.add('hidden');
+        localStorage.setItem('currentUser', email);
+        initializeDashboard();
+      } else {
+        errorMsg.classList.remove('hidden');
+      }
+    }
+
+    function toggleChat() {
+      document.getElementById('chatbot').classList.toggle('hidden');
+    }
+
+    // Chatbot knowledge base
+    const chatbotKnowledge = {
+      'water conservation': [
+        'Fix leaks promptly - a dripping faucet can waste up to 20 gallons per day.',
+        'Take shorter showers - reducing shower time by 2 minutes can save 5 gallons.',
+        'Use a broom instead of a hose to clean driveways and sidewalks.',
+        'Install water-efficient fixtures and appliances.',
+        'Water plants early morning or late evening to reduce evaporation.'
+      ],
+      'water quality': [
+        'pH levels should be between 6.5 and 8.5 for safe drinking water.',
+        'Turbidity measures water clarity - lower values indicate cleaner water.',
+        'Chlorine levels between 0.2 and 4.0 mg/L are safe for drinking.',
+        'Regular water testing helps ensure safety and quality.',
+        'Boiling water can kill most bacteria and viruses.'
+      ],
+      'rainwater harvesting': [
+        'Collect rainwater from rooftops using gutters and downspouts.',
+        'Store rainwater in clean, covered containers.',
+        'Use harvested rainwater for gardening and cleaning.',
+        'Install a first-flush system to divert initial dirty water.',
+        'Regular maintenance of harvesting systems is essential.'
+      ],
+      'water pollution': [
+        'Common sources include industrial waste, agricultural runoff, and sewage.',
+        'Use eco-friendly cleaning products to reduce water pollution.',
+        'Properly dispose of hazardous materials.',
+        'Support local water protection initiatives.',
+        'Report pollution incidents to authorities immediately.'
+      ]
+    };
+
+    // Voice recognition setup
+    let recognition = null;
+    let isListening = false;
+    let synthesis = window.speechSynthesis;
+
+    function initializeVoiceRecognition() {
+      if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+          isListening = true;
+          document.getElementById('voiceStatus').classList.remove('hidden');
+          document.getElementById('voiceButton').classList.add('bg-blue-700');
+        };
+
+        recognition.onend = () => {
+          isListening = false;
+          document.getElementById('voiceStatus').classList.add('hidden');
+          document.getElementById('voiceButton').classList.remove('bg-blue-700');
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          document.getElementById('userInput').value = transcript;
+          sendMessage();
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          document.getElementById('voiceStatus').classList.add('hidden');
+          document.getElementById('voiceButton').classList.remove('bg-blue-700');
+        };
+      }
+    }
+
+    function toggleVoiceInput() {
+      if (!recognition) {
+        initializeVoiceRecognition();
+      }
+
+      if (isListening) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    }
+
+    function speakResponse(text) {
+      if (synthesis.speaking) {
+        synthesis.cancel();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      synthesis.speak(utterance);
+    }
+
+    function getImmediateResponse(query) {
+      query = query.toLowerCase();
+      
+      // Check for keywords in the knowledge base
+      for (const [topic, responses] of Object.entries(chatbotKnowledge)) {
+        if (query.includes(topic)) {
+          return responses[Math.floor(Math.random() * responses.length)];
+        }
+      }
+
+      // Default responses for common questions
+      if (query.includes('hello') || query.includes('hi')) {
+        return 'Hello! How can I help you with water-related questions today?';
+      } else if (query.includes('thank')) {
+        return "You're welcome! Feel free to ask more questions about water conservation and quality.";
+      } else if (query.includes('help')) {
+        return 'I can help you with water conservation tips, water quality information, rainwater harvesting, and more. What would you like to know?';
+      }
+
+      // If no specific match, provide a general response
+      return "I'm here to help with water-related questions. You can ask about water conservation, quality, rainwater harvesting, or pollution. What would you like to know?";
+    }
+
+    async function sendMessage() {
+      const inputEl = document.getElementById('userInput');
+      const msg = inputEl.value.trim();
+      const chatEl = document.getElementById('chatMessages');
+      
+      if (!msg) return;
+      
+      // Add user message to chat
+      chatEl.innerHTML += `<div class="mb-2"><strong>You:</strong> ${msg}</div>`;
+      inputEl.value = '';
+
+      // Get immediate response
+      const response = getImmediateResponse(msg);
+      
+      // Add bot response to chat
+      chatEl.innerHTML += `<div class="mb-2 text-green-700"><strong>Bot:</strong> ${response}</div>`;
+      
+      // Speak the response
+      speakResponse(response);
+
+      // Scroll to bottom
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function openReportModal() {
+      document.getElementById('reportModal').classList.remove('hidden');
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.add('hidden');
+      document.getElementById('reportForm').reset();
+    }
+
+    function viewMyReports() {
+      const reportsModal = document.getElementById('reportsModal');
+      const reportsList = document.getElementById('reportsList');
+      const currentUserEmail = localStorage.getItem('currentUser');
+      
+      if (!currentUserEmail) {
+        alert('Please login to view your reports');
+        return;
+      }
+
+      const reports = JSON.parse(localStorage.getItem('reports')) || [];
+      const userReports = reports.filter(report => report.reporterEmail === currentUserEmail);
+
+      if (userReports.length === 0) {
+        reportsList.innerHTML = '<p class="text-center text-gray-500">No reports found</p>';
+      } else {
+        reportsList.innerHTML = userReports.map(report => `
+          <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-lg">${report.issueType.charAt(0).toUpperCase() + report.issueType.slice(1)}</h4>
+                <p class="text-gray-600">${report.location}</p>
+                <p class="text-sm text-gray-500 mt-2">${new Date(report.timestamp).toLocaleString()}</p>
+              </div>
+              <span class="px-3 py-1 rounded-full text-sm font-semibold ${
+                report.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                report.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                'bg-red-100 text-red-800'
+              }">
+                ${report.status.charAt(0).toUpperCase() + report.status.slice(1)}
+              </span>
+            </div>
+            <p class="mt-2">${report.description}</p>
+            ${report.mediaUrl ? `
+              <div class="mt-4">
+                <img src="${report.mediaUrl}" alt="Report media" class="max-w-full h-auto rounded-lg">
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      reportsModal.classList.remove('hidden');
+    }
+
+    function closeReportsModal() {
+      document.getElementById('reportsModal').classList.add('hidden');
+    }
+
+    function submitReport(event) {
+      event.preventDefault();
+      
+      const issueType = document.getElementById('issueType').value;
+      const location = document.getElementById('location').value;
+      const description = document.getElementById('description').value;
+      const mediaFile = document.getElementById('mediaUpload').files[0];
+
+      // Create a FormData object to handle file upload
+      const formData = new FormData();
+      formData.append('issueType', issueType);
+      formData.append('location', location);
+      formData.append('description', description);
+      formData.append('media', mediaFile);
+
+      // Get current user's email from localStorage
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const currentUser = users.find(user => user.email === localStorage.getItem('currentUser'));
+      
+      if (currentUser) {
+        formData.append('reporterName', currentUser.name);
+        formData.append('reporterEmail', currentUser.email);
+        formData.append('reporterPhone', currentUser.phone);
+      }
+
+      // Here you would typically send the formData to your backend
+      // For now, we'll just store it in localStorage
+      const reports = JSON.parse(localStorage.getItem('reports')) || [];
+      
+      // Create a preview URL for the uploaded file
+      let mediaUrl = '';
+      if (mediaFile) {
+        mediaUrl = URL.createObjectURL(mediaFile);
+      }
+
+      reports.push({
+        id: Date.now(),
+        issueType,
+        location,
+        description,
+        reporterName: currentUser?.name,
+        reporterEmail: currentUser?.email,
+        reporterPhone: currentUser?.phone,
+        timestamp: new Date().toISOString(),
+        status: 'pending',
+        mediaUrl
+      });
+      localStorage.setItem('reports', JSON.stringify(reports));
+
+      // Show success message
+      alert('Report submitted successfully! We will review it shortly.');
+      closeReportModal();
+
+      // After successful submission
+      initializeNotifications();
+    }
+
+    function initializeDashboard() {
+      const reports = JSON.parse(localStorage.getItem('reports')) || [];
+      
+      // Update statistics
+      document.getElementById('totalReports').textContent = reports.length;
+      document.getElementById('resolvedReports').textContent = reports.filter(r => r.status === 'resolved').length;
+      document.getElementById('pendingReports').textContent = reports.filter(r => r.status === 'pending').length;
+
+      // Initialize map
+      const map = L.map('map').setView([20.5937, 78.9629], 5); // Center on India
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add markers for each report
+      reports.forEach(report => {
+        if (report.location) {
+          // In a real application, you would geocode the location
+          // For now, we'll use a random location near the center
+          const lat = 20.5937 + (Math.random() - 0.5) * 10;
+          const lng = 78.9629 + (Math.random() - 0.5) * 10;
+          
+          const marker = L.marker([lat, lng]).addTo(map);
+          marker.bindPopup(`
+            <strong>${report.issueType}</strong><br>
+            ${report.location}<br>
+            Status: ${report.status}
+          `);
+        }
+      });
+
+      // Initialize issue types chart
+      const issueTypes = {};
+      reports.forEach(report => {
+        issueTypes[report.issueType] = (issueTypes[report.issueType] || 0) + 1;
+      });
+
+      const ctx = document.getElementById('issueTypesChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(issueTypes),
+          datasets: [{
+            data: Object.values(issueTypes),
+            backgroundColor: [
+              '#FF6384',
+              '#36A2EB',
+              '#FFCE56',
+              '#4BC0C0'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+
+      // Update user profile
+      updateUserProfile();
+      // Initialize notifications
+      initializeNotifications();
+
+      // Initialize settings
+      initializeSettings();
+
+      // Initialize community features
+      initializeCommunity();
+
+      // Initialize water quality monitoring
+      initializeWaterQuality();
+    }
+
+    function updateUserProfile() {
+      const currentUserEmail = localStorage.getItem('currentUser');
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const currentUser = users.find(user => user.email === currentUserEmail);
+      
+      if (currentUser) {
+        document.getElementById('userName').textContent = currentUser.name;
+        document.getElementById('profileName').textContent = currentUser.name;
+        document.getElementById('profileEmail').textContent = currentUser.email;
+        document.getElementById('profilePhone').textContent = currentUser.phone;
+        
+        // Count user's reports
+        const reports = JSON.parse(localStorage.getItem('reports')) || [];
+        const userReports = reports.filter(report => report.reporterEmail === currentUserEmail);
+        document.getElementById('profileReports').textContent = userReports.length;
+      }
+    }
+
+    function initializeNotifications() {
+      const reports = JSON.parse(localStorage.getItem('reports')) || [];
+      const currentUserEmail = localStorage.getItem('currentUser');
+      const userReports = reports.filter(report => report.reporterEmail === currentUserEmail);
+      
+      // Count pending reports
+      const pendingCount = userReports.filter(report => report.status === 'pending').length;
+      const notificationCount = document.getElementById('notificationCount');
+      
+      if (pendingCount > 0) {
+        notificationCount.textContent = pendingCount;
+        notificationCount.classList.remove('hidden');
+      } else {
+        notificationCount.classList.add('hidden');
+      }
+
+      // Update notifications list
+      const notificationsList = document.getElementById('notificationsList');
+      notificationsList.innerHTML = userReports.map(report => `
+        <div class="p-4 ${report.status === 'pending' ? 'bg-yellow-50' : 'bg-green-50'}">
+          <div class="font-medium">${report.issueType}</div>
+          <div class="text-sm text-gray-600">${report.location}</div>
+          <div class="text-sm ${report.status === 'pending' ? 'text-yellow-600' : 'text-green-600'}">
+            Status: ${report.status}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleNotifications() {
+      document.getElementById('notificationsPanel').classList.toggle('hidden');
+      document.getElementById('profilePanel').classList.add('hidden');
+    }
+
+    function toggleProfile() {
+      document.getElementById('profilePanel').classList.toggle('hidden');
+      document.getElementById('notificationsPanel').classList.add('hidden');
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      document.getElementById('mainContent').classList.add('hidden');
+      document.getElementById('authPage').style.display = 'flex';
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('signupForm').classList.add('hidden');
+    }
+
+    // Initialize settings from localStorage
+    function initializeSettings() {
+      const darkMode = localStorage.getItem('darkMode') === 'true';
+      const language = localStorage.getItem('language') || 'en';
+      
+      if (darkMode) {
+        document.body.classList.add('dark');
+        document.getElementById('darkModeToggle').checked = true;
+      }
+      
+      document.getElementById('languageSelect').value = language;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+      const isDarkMode = document.body.classList.contains('dark');
+      localStorage.setItem('darkMode', isDarkMode);
+      
+      // Update icon
+      const icon = document.getElementById('darkModeIcon');
+      if (isDarkMode) {
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+      } else {
+        icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+      }
+    }
+
+    function toggleHelp() {
+      document.getElementById('helpPanel').classList.toggle('hidden');
+      document.getElementById('settingsPanel').classList.add('hidden');
+      document.getElementById('profilePanel').classList.add('hidden');
+      document.getElementById('notificationsPanel').classList.add('hidden');
+    }
+
+    function toggleSettings() {
+      document.getElementById('settingsPanel').classList.toggle('hidden');
+      document.getElementById('helpPanel').classList.add('hidden');
+      document.getElementById('profilePanel').classList.add('hidden');
+      document.getElementById('notificationsPanel').classList.add('hidden');
+    }
+
+    function saveSettings() {
+      const darkMode = document.getElementById('darkModeToggle').checked;
+      const language = document.getElementById('languageSelect').value;
+      
+      localStorage.setItem('darkMode', darkMode);
+      localStorage.setItem('language', language);
+      
+      if (darkMode) {
+        document.body.classList.add('dark');
+      } else {
+        document.body.classList.remove('dark');
+      }
+      
+      // Show success message
+      alert('Settings saved successfully!');
+      document.getElementById('settingsPanel').classList.add('hidden');
+    }
+
+    function initializeCommunity() {
+      // Update community stats
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const posts = JSON.parse(localStorage.getItem('communityPosts')) || [];
+      
+      document.getElementById('totalUsers').textContent = users.length;
+      document.getElementById('communityPosts').textContent = posts.length;
+      
+      // Calculate saved water (example calculation)
+      const savedWater = posts.reduce((total, post) => total + (post.savedWater || 0), 0);
+      document.getElementById('savedWater').textContent = savedWater.toLocaleString();
+
+      // Display community posts
+      const communityFeed = document.getElementById('communityFeed');
+      communityFeed.innerHTML = posts.map(post => `
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+          <div class="flex items-center mb-2">
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white mr-2">
+              ${post.author.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div class="font-medium">${post.author}</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">${new Date(post.timestamp).toLocaleString()}</div>
+            </div>
+          </div>
+          <p class="text-gray-700 dark:text-gray-300">${post.content}</p>
+          ${post.savedWater ? `
+            <div class="mt-2 text-sm text-green-600 dark:text-green-400">
+              Estimated water saved: ${post.savedWater} liters
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    function submitPost() {
+      const content = document.getElementById('newPost').value.trim();
+      if (!content) return;
+
+      const currentUserEmail = localStorage.getItem('currentUser');
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+      const currentUser = users.find(user => user.email === currentUserEmail);
+
+      if (!currentUser) return;
+
+      const posts = JSON.parse(localStorage.getItem('communityPosts')) || [];
+      posts.push({
+        author: currentUser.name,
+        content,
+        timestamp: new Date().toISOString(),
+        savedWater: Math.floor(Math.random() * 1000) // Example calculation
+      });
+
+      localStorage.setItem('communityPosts', JSON.stringify(posts));
+      document.getElementById('newPost').value = '';
+      initializeCommunity();
+    }
+
+    function initializeWaterQuality() {
+      // Simulate water quality data
+      const qualityData = {
+        ph: 7.2,
+        turbidity: 0.5,
+        chlorine: 2.0,
+        timestamp: new Date()
+      };
+
+      // Update display values
+      document.getElementById('phValue').textContent = qualityData.ph;
+      document.getElementById('turbidityValue').textContent = qualityData.turbidity;
+      document.getElementById('chlorineValue').textContent = qualityData.chlorine;
+      document.getElementById('lastUpdate').textContent = 'Just now';
+
+      // Initialize quality chart
+      const ctx = document.getElementById('qualityChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: 'pH Level',
+            data: [7.0, 7.1, 7.2, 7.1, 7.3, 7.2, 7.2],
+            borderColor: '#3B82F6',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 6,
+              max: 8
+            }
+          }
+        }
+      });
+    }
+
+    function requestWaterTest() {
+      const currentUserEmail = localStorage.getItem('currentUser');
+      if (!currentUserEmail) {
+        alert('Please login to request a water test');
+        return;
+      }
+
+      // In a real application, this would send a request to schedule a water test
+      alert('Water test request submitted! A technician will contact you within 24 hours.');
+      
+      // Award points for requesting a water test
+      const userProgress = JSON.parse(localStorage.getItem('userProgress')) || {};
+      const userData = userProgress[currentUserEmail] || { points: 0 };
+      userData.points += 30;
+      userProgress[currentUserEmail] = userData;
+      localStorage.setItem('userProgress', JSON.stringify(userProgress));
+      
+      initializeRewards();
+    }
+
+    function openResource(category) {
+      const resources = {
+        conservation: 'https://example.com/conservation',
+        science: 'https://example.com/science',
+        global: 'https://example.com/global'
+      };
+      
+      // In a real application, this would open the appropriate resource
+      alert(`Opening ${category} resources...`);
+    }
+
+    function downloadResource(resourceId) {
+      const resources = {
+        'conservation-guide': 'Water_Conservation_Guide.pdf',
+        'testing-manual': 'Water_Quality_Testing_Manual.pdf',
+        'rainwater-guide': 'Rainwater_Harvesting_Guide.pdf'
+      };
+      
+      // In a real application, this would trigger a file download
+      alert(`Downloading ${resources[resourceId]}...`);
+      
+      // Award points for downloading resources
+      const currentUserEmail = localStorage.getItem('currentUser');
+      if (currentUserEmail) {
+        const userProgress = JSON.parse(localStorage.getItem('userProgress')) || {};
+        const userData = userProgress[currentUserEmail] || { points: 0 };
+        userData.points += 20;
+        userProgress[currentUserEmail] = userData;
+        localStorage.setItem('userProgress', JSON.stringify(userProgress));
+        
+        initializeRewards();
+      }
+    }
+
+    // Water usage constants (gallons)
+    const USAGE_CONSTANTS = {
+      shower: 2.1, // per minute
+      toilet: 1.6, // per flush
+      dishwasher: 6, // per load
+      washingMachine: 25, // per load
+      outdoor: 5 // per minute
+    };
+
+    // Average household usage (gallons per day)
+    const AVERAGE_DAILY_USAGE = 80;
+
+    function calculateWaterUsage(event) {
+      event.preventDefault();
+
+      // Get input values
+      const showerDuration = parseFloat(document.getElementById('showerDuration').value) || 0;
+      const toiletFlushes = parseFloat(document.getElementById('toiletFlushes').value) || 0;
+      const dishwasherLoads = parseFloat(document.getElementById('dishwasherLoads').value) || 0;
+      const washingMachineLoads = parseFloat(document.getElementById('washingMachineLoads').value) || 0;
+      const outdoorWatering = parseFloat(document.getElementById('outdoorWatering').value) || 0;
+
+      // Calculate daily usage
+      const dailyUsage = 
+        (showerDuration * USAGE_CONSTANTS.shower) +
+        (toiletFlushes * USAGE_CONSTANTS.toilet) +
+        ((dishwasherLoads / 7) * USAGE_CONSTANTS.dishwasher) +
+        ((washingMachineLoads / 7) * USAGE_CONSTANTS.washingMachine) +
+        ((outdoorWatering / 7) * USAGE_CONSTANTS.outdoor);
+
+      // Update results
+      document.getElementById('dailyUsage').textContent = `${dailyUsage.toFixed(1)} gallons`;
+      document.getElementById('weeklyUsage').textContent = `${(dailyUsage * 7).toFixed(1)} gallons`;
+      document.getElementById('monthlyUsage').textContent = `${(dailyUsage * 30).toFixed(1)} gallons`;
+      document.getElementById('annualUsage').textContent = `${(dailyUsage * 365).toFixed(1)} gallons`;
+
+      // Update progress bar and comparison
+      const usagePercentage = Math.min((dailyUsage / AVERAGE_DAILY_USAGE) * 100, 100);
+      document.getElementById('usageProgress').style.width = `${usagePercentage}%`;
+      
+      const comparisonText = dailyUsage < AVERAGE_DAILY_USAGE ? 
+        'Your usage is below average' : 
+        dailyUsage > AVERAGE_DAILY_USAGE ? 
+        'Your usage is above average' : 
+        'Your usage is average';
+      document.getElementById('usageComparison').textContent = comparisonText;
+
+      // Generate conservation recommendations
+      generateConservationRecommendations(dailyUsage, {
+        showerDuration,
+        toiletFlushes,
+        dishwasherLoads,
+        washingMachineLoads,
+        outdoorWatering
+      });
+    }
+
+    function generateConservationRecommendations(dailyUsage, usageData) {
+      const recommendations = [];
+      const recommendationsContainer = document.getElementById('conservationRecommendations');
+      
+      // Shower recommendations
+      if (usageData.showerDuration > 10) {
+        recommendations.push({
+          title: 'Reduce Shower Time',
+          description: 'Try reducing your shower time by 2 minutes to save water.',
+          impact: `Could save ${(2 * USAGE_CONSTANTS.shower).toFixed(1)} gallons per day`
+        });
+      }
+
+      // Toilet recommendations
+      if (usageData.toiletFlushes > 5) {
+        recommendations.push({
+          title: 'Install Water-Efficient Toilet',
+          description: 'Consider installing a low-flow toilet to reduce water usage per flush.',
+          impact: 'Could save up to 50% of toilet water usage'
+        });
+      }
+
+      // Dishwasher recommendations
+      if (usageData.dishwasherLoads < 4) {
+        recommendations.push({
+          title: 'Run Full Loads',
+          description: 'Wait until your dishwasher is full before running it.',
+          impact: 'Could save water and energy'
+        });
+      }
+
+      // Washing machine recommendations
+      if (usageData.washingMachineLoads > 3) {
+        recommendations.push({
+          title: 'Consolidate Laundry',
+          description: 'Try to do fewer, larger loads of laundry.',
+          impact: 'Could save water and energy'
+        });
+      }
+
+      // Outdoor watering recommendations
+      if (usageData.outdoorWatering > 30) {
+        recommendations.push({
+          title: 'Optimize Outdoor Watering',
+          description: 'Water plants early morning or late evening to reduce evaporation.',
+          impact: 'Could save up to 30% of outdoor water usage'
+        });
+      }
+
+      // Display recommendations
+      recommendationsContainer.innerHTML = recommendations.map(rec => `
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+          <h4 class="font-bold mb-2">${rec.title}</h4>
+          <p class="text-gray-600 dark:text-gray-300 mb-2">${rec.description}</p>
+          <p class="text-sm text-green-600 dark:text-green-400">${rec.impact}</p>
+        </div>
+      `).join('');
+
+      // Update progress tracking
+      updateProgressTracking(dailyUsage);
+    }
+
+    function updateProgressTracking(dailyUsage) {
+      // Get saved progress from localStorage
+      const progress = JSON.parse(localStorage.getItem('waterConservationProgress')) || {
+        waterSaved: 0,
+        moneySaved: 0,
+        lastUpdate: new Date().toISOString(),
+        streak: 0
+      };
+
+      // Calculate savings (assuming $0.002 per gallon)
+      const dailySavings = (AVERAGE_DAILY_USAGE - dailyUsage) * 0.002;
+      progress.waterSaved += Math.max(0, AVERAGE_DAILY_USAGE - dailyUsage);
+      progress.moneySaved += dailySavings;
+
+      // Update streak
+      const lastUpdate = new Date(progress.lastUpdate);
+      const today = new Date();
+      if (today.getDate() === lastUpdate.getDate() + 1) {
+        progress.streak++;
+      } else if (today.getDate() !== lastUpdate.getDate()) {
+        progress.streak = 0;
+      }
+      progress.lastUpdate = today.toISOString();
+
+      // Save progress
+      localStorage.setItem('waterConservationProgress', JSON.stringify(progress));
+
+      // Update display
+      document.getElementById('waterSaved').textContent = progress.waterSaved.toFixed(1);
+      document.getElementById('moneySaved').textContent = `$${progress.moneySaved.toFixed(2)}`;
+      document.getElementById('daysStreak').textContent = progress.streak;
+
+      // Generate weekly goals
+      generateWeeklyGoals(dailyUsage);
+    }
+
+    function generateWeeklyGoals(dailyUsage) {
+      const goals = [
+        {
+          title: 'Reduce Shower Time',
+          target: '2 minutes less per shower',
+          progress: 0
+        },
+        {
+          title: 'Fix Leaks',
+          target: 'Check all faucets and pipes',
+          progress: 0
+        },
+        {
+          title: 'Smart Watering',
+          target: 'Water plants during optimal times',
+          progress: 0
+        }
+      ];
+
+      const goalsContainer = document.getElementById('weeklyGoals');
+      goalsContainer.innerHTML = goals.map(goal => `
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="font-bold">${goal.title}</h4>
+            <span class="text-sm text-gray-600 dark:text-gray-300">${goal.progress}%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: ${goal.progress}%"></div>
+          </div>
+          <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">Target: ${goal.target}</p>
+        </div>
+      `).join('');
+    }
+
+    // Initialize calculator when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      calculateWaterUsage({ preventDefault: () => {} });
+    });
+
+    // Initialize voice recognition when the page loads
+    document.addEventListener('DOMContentLoaded', initializeVoiceRecognition);
+  </script>
+</body>
+</html> 
